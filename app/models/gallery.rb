@@ -1,4 +1,6 @@
 class Gallery < ActiveRecord::Base
+  has_many :images
+
   validates :secret,
     :format => { :with => /\A[a-zA-Z0-9]+\z/, :message => "only allows letters and numbers"},
     :length => { :in => (6..100) },
