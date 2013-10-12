@@ -11,7 +11,7 @@ class Gallery < ActiveRecord::Base
     (0...12).map{ (65 + rand(26)).chr }.join
   end
 
-  def queue_resize
+  def queue_import
     Resque.enqueue GalleryResizeJob, self.id
   end
 

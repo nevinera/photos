@@ -17,8 +17,6 @@ class GalleryResizeJob
   #   to be visible to admins looking at an in progress resize job.
   def work
     gallery.update_column(:state, 'resizing')
-
-    move_to_work_zone
     prepare_destination
 
     File.open(File.join(gallery.dir, 'resize.log'), 'w') do |log|
@@ -30,14 +28,6 @@ class GalleryResizeJob
     end
 
     gallery.update_column(:state, 'resizing')
-  end
-
-  # Move the from_directory into the working area, to WORKING_PATH/gallery_id/
-  def move_to_work_zone
-    unless Dir.exist?(gallery.upload_path)
-      raise "Directory '#{gallery.upload_path}' was not found"
-    end
-    FileUtils.mv gallery.upload_path, gallery.work_path
   end
 
   # Make a directory in GALLERY_ROOT/gallery_secret containing two subdirs:
