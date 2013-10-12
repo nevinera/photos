@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130922161633) do
+ActiveRecord::Schema.define(version: 20131012172728) do
 
   create_table "admins", force: true do |t|
     t.string   "email",               default: "", null: false
@@ -32,6 +32,8 @@ ActiveRecord::Schema.define(version: 20130922161633) do
     t.string   "secret"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "from_directory"
+    t.string   "state",          default: "waiting"
   end
 
   add_index "galleries", ["date"], name: "index_galleries_on_date"
