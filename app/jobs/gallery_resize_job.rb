@@ -1,9 +1,12 @@
+require 'fileutils'
+
 class GalleryResizeJob
   attr_accessor :gallery
 
   def self.perform(gallery_id)
     self.new(gallery_id).work
   end
+
 
   def initialize(gallery_id)
     self.gallery = Gallery.find(gallery_id)
@@ -17,59 +20,102 @@ class GalleryResizeJob
 
     move_to_work_zone
     prepare_destination
-    document_input_files
 
-    resize_all_images
-
-    delete_original_directory
+    File.open(File.join(gallery.dir, 'resize.log'), 'w') do |log|
+      log.puts "Import in progress"
+      document_input_files(log)
+      resize_all_images(log)
+      delete_original_directory(log)
+      log.puts "Import complete - awaiting confirmation"
+    end
 
     gallery.update_column(:state, 'resizing')
   end
 
   # Move the from_directory into the working area, to WORKING_PATH/gallery_id/
   def move_to_work_zone
+    unless Dir.exist?(gallery.upload_path)
+      raise "Directory '#{gallery.upload_path}' was not found"
+    end
+    FileUtils.mv gallery.upload_path, gallery.work_path
   end
 
   # Make a directory in GALLERY_ROOT/gallery_secret containing two subdirs:
   # one called 'thumbs', and one called 'web'
   def prepare_destination
+    FileUtils.mkdir gallery.dir
+    FileUtils.mkdir gallery.thumbdir
+    FileUtils.mkdir gallery.webdir
   end
 
-  def delete_original_directory
+  def delete_original_directory(log)
+    log.puts "--> Removing the originally uploaded images"
+    FileUtils.rmtree gallery.work_path
   end
 
   # Into the destination directory:
   #   Capture the output of ls -la on working directory into a manifest.txt file
   #   Capture the md5 for each of the input files as well,
   #   and the output of the 'file' command
-  def document_input_files
+  def document_input_files(log)
+    log.puts "--> Documenting the input files (md5, size, type) into input.txt"
+    docpath = File.join(gallery.dir, 'input.txt')
+    File.open(docpath, 'w') do |f|
+      each_image do |path|
+        f.puts "Image '#{path}':"
+
+        ls_out = `ls -lah '#{path}'`
+        f.puts "    ls: #{ls_out}"
+
+        md5_out = `md5sum '#{path}'`.split(' ').first
+        f.puts "    MD5: #{md5_out}"
+
+        file_out = `file '#{path}'`
+        f.puts "    file: #{file_out}"
+      end
+    end
   end
 
   # For each image, resize the image down to fit inside the thumbnail square,
   #   and to fit inside the web square, and put the corresponding image
   #   in the correct place. Then store the image with data into the database,
   #   attached to the gallery
-  def resize_all_images
+  def resize_all_images(log)
+    log.puts "--> Resizing images"
+    offset = 0
     each_image do |image_path|
-      produce_thumbnail_image
-      produce_web_image
-      create_image_in_db
+      file_name = File.basename image_path
+      suffix = file_name.split('.').last.downcase
+      unless suffix.present? and Image::VALID_SUFFIXES.include?(suffix)
+        log.puts "    - skipping '#{file_name}' - unrecognized or missing suffix"
+        next
+      end
+
+      log.puts "    - processing '#{file_name}'"
+
+      img = Image.new
+      img.original_name = file_name
+      img.original_size = File.size(image_path)
+      img.gallery_id = gallery.id
+      img.position = offset
+      img.gallery_secret = gallery.secret
+      img.suffix = suffix
+      img.save!
+
+      # TODO: resize instead of copying
+      log.puts "         Building Thumbnail"
+      FileUtils.cp image_path, img.thumbpath
+
+      log.puts "         Building Websize"
+      FileUtils.cp image_path, img.webpath
+
+      offset += 1
     end
   end
 
   def each_image(&block)
+    Dir.glob(File.join gallery.work_path, '*').each do |file|
+      yield File.expand_path(file)
+    end
   end
-
-
-  # use image magick somehow to perform these conversions
-  def produce_thumbnail_image
-  end
-  def produce_web_image
-  end
-
-  # store information about the images - sizes, original names, etc
-  # add an entry to the images table that belongs to the gallery being built
-  def create_image_in_db
-  end
-
 end
