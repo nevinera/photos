@@ -1,0 +1,16 @@
+= link_to "Create a new gallery", new_gallery_path
+
+table
+  tr
+    th Name
+    th Client
+    th Date
+    th Created On
+    th Secret
+  - @galleries.each do |g|
+    tr
+      td= link_to g.name, gallery_path(g)
+      td= g.client
+      td= g.date.to_s
+      td= g.created_at.to_date
+      td= g.secret

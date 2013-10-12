@@ -1,0 +1,5 @@
+
+ul
+  li= link_to 'All Galleries', galleries_path
+  li= link_to 'Change Password', edit_admin_path(current_admin)
+  li= link_to "Sign Out #{current_admin.email}", destroy_admin_session_path, :method => :delete
