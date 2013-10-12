@@ -1,6 +1,8 @@
 require 'fileutils'
 
 class GalleryResizeJob
+  @queue = :import
+
   attr_accessor :gallery
 
   def self.perform(gallery_id)

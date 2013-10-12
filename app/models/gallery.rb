@@ -11,7 +11,7 @@ class Gallery < ActiveRecord::Base
     (0...12).map{ (65 + rand(26)).chr }.join
   end
 
-  def queue_import
+  def queue_import!
     Resque.enqueue GalleryResizeJob, self.id
   end
 
@@ -20,4 +20,8 @@ class Gallery < ActiveRecord::Base
   def dir; File.expand_path(File.join $GALLERY_ROOT, self.secret); end
   def thumbdir; File.join(self.dir, 'thumb'); end
   def webdir; File.join(self.dir, 'web'); end
+
+  def move_to_working_dir!
+    FileUtils.mv self.upload_path, self.work_path
+  end
 end
