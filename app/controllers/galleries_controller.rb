@@ -18,6 +18,7 @@ class GalleriesController < ApplicationController
   def new
     authenticate_admin!
     @gallery = Gallery.new :secret => Gallery.random_secret
+    @availables = GalleryList.available_directories
   end
 
   def create

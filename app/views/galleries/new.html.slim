@@ -22,6 +22,6 @@ h1 Create a New Gallery
   = f.text_field :secret
 
   = f.label :from_directory
-  = f.text_field :from_directory
+  = f.select :from_directory, @availables
 
   = f.submit
