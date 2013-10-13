@@ -14,19 +14,19 @@ class GalleryResizeJob
     self.gallery = Gallery.find(gallery_id)
   end
 
-  # TODO:
-  # Keep a live log of progress (which image is being converted, stamps, etc)
-  #   to be visible to admins looking at an in progress resize job.
+  def time
+    Time.now.strftime("%c"
+  end
   def work
     gallery.update_column(:state, 'resizing')
     prepare_destination
 
     File.open(File.join(gallery.dir, 'resize.log'), 'w') do |log|
-      log.puts "Import in progress"
+      log.puts "#{time} --> Import in progress"
       document_input_files(log)
       resize_all_images(log)
       delete_original_directory(log)
-      log.puts "Import complete - awaiting confirmation"
+      log.puts "#{time} --> Import complete - awaiting confirmation"
     end
 
     gallery.update_column(:state, 'resizing')
@@ -41,7 +41,7 @@ class GalleryResizeJob
   end
 
   def delete_original_directory(log)
-    log.puts "--> Removing the originally uploaded images"
+    log.puts "#{time} --> Removing the originally uploaded images"
     FileUtils.rmtree gallery.work_path
   end
 
@@ -73,17 +73,17 @@ class GalleryResizeJob
   #   in the correct place. Then store the image with data into the database,
   #   attached to the gallery
   def resize_all_images(log)
-    log.puts "--> Resizing images"
+    log.puts "#{time} --> Resizing images"
     offset = 0
     each_image do |image_path|
       file_name = File.basename image_path
       suffix = file_name.split('.').last.downcase
       unless suffix.present? and Image::VALID_SUFFIXES.include?(suffix)
-        log.puts "    - skipping '#{file_name}' - unrecognized or missing suffix"
+        log.puts "#{time}    - skipping '#{file_name}' - unrecognized or missing suffix"
         next
       end
 
-      log.puts "    - processing '#{file_name}'"
+      log.puts "#{time}    - processing '#{file_name}'"
 
       img = Image.new
       img.original_name = file_name
@@ -95,10 +95,10 @@ class GalleryResizeJob
       img.save!
 
       # TODO: resize instead of copying
-      log.puts "         Building Thumbnail"
+      log.puts "#{time}         Building Thumbnail"
       FileUtils.cp image_path, img.thumbpath
 
-      log.puts "         Building Websize"
+      log.puts "#{time}         Building Websize"
       FileUtils.cp image_path, img.webpath
 
       offset += 1
