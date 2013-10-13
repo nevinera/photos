@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130922161633) do
+ActiveRecord::Schema.define(version: 20131012200526) do
 
   create_table "admins", force: true do |t|
     t.string   "email",               default: "", null: false
@@ -32,9 +32,24 @@ ActiveRecord::Schema.define(version: 20130922161633) do
     t.string   "secret"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "from_directory"
+    t.string   "state",          default: "waiting"
   end
 
   add_index "galleries", ["date"], name: "index_galleries_on_date"
   add_index "galleries", ["secret"], name: "index_galleries_on_secret", unique: true
+
+  create_table "images", force: true do |t|
+    t.integer  "gallery_id"
+    t.string   "original_name"
+    t.integer  "original_size"
+    t.integer  "position"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string   "gallery_secret"
+    t.string   "suffix"
+  end
+
+  add_index "images", ["gallery_id", "position"], name: "index_images_on_gallery_id_and_position", unique: true
 
 end

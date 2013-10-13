@@ -26,6 +26,9 @@ class GalleriesController < ApplicationController
     @gallery = Gallery.new gal
 
     if @gallery.save
+      @gallery.move_to_working_dir!
+      @gallery.queue_import!
+
       redirect_to galleries_path, :notice => "That gallery has been created"
     else
       render :new

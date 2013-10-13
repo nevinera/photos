@@ -1,3 +1,27 @@
 h1 Create a New Gallery
 
-== render 'form'
+= form_for @gallery do |f|
+  - if @gallery.errors.any?
+    ul
+      - @gallery.errors.full_messages.each do |msg|
+        li= msg
+
+  = f.label :name
+  = f.text_field :name
+
+  = f.label :client
+  = f.text_field :client
+
+  = f.label :date
+  = f.date_field :date
+
+  = f.label :notes
+  = f.text_area :notes
+
+  = f.label :secret
+  = f.text_field :secret
+
+  = f.label :from_directory
+  = f.text_field :from_directory
+
+  = f.submit

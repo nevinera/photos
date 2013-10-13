@@ -12,3 +12,5 @@ gem 'coffee-rails', '~> 4.0.0'
 gem 'jquery-rails'
 
 gem 'slim-rails'
+gem 'resque'
+gem 'rmagick'
