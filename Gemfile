@@ -13,3 +13,4 @@ gem 'jquery-rails'
 
 gem 'slim-rails'
 gem 'resque'
+gem 'rmagick'
