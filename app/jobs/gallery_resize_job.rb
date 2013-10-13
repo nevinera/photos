@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'RMagick'
 
 class GalleryResizeJob
   @queue = :import
@@ -14,9 +15,8 @@ class GalleryResizeJob
     self.gallery = Gallery.find(gallery_id)
   end
 
-  def time
-    Time.now.strftime("%c"
-  end
+  def time; Time.now.strftime("%c"); end
+
   def work
     gallery.update_column(:state, 'resizing')
     prepare_destination
@@ -94,12 +94,11 @@ class GalleryResizeJob
       img.suffix = suffix
       img.save!
 
-      # TODO: resize instead of copying
       log.puts "#{time}         Building Thumbnail"
-      FileUtils.cp image_path, img.thumbpath
+      resize_to_thumbnail image_path, img.thumbpath
 
       log.puts "#{time}         Building Websize"
-      FileUtils.cp image_path, img.webpath
+      resize_to_web image_path, img.webpath
 
       offset += 1
     end
@@ -109,5 +108,18 @@ class GalleryResizeJob
     Dir.glob(File.join gallery.work_path, '*').each do |file|
       yield File.expand_path(file)
     end
+  end
+
+
+  def resize_to_thumbnail(img_path, dest_path)
+    img = Magick::Image.read(img_path).first
+    thumb = img.resize_to_fit 125, 125
+    thumb.write dest_path
+  end
+
+  def resize_to_web(img_path, dest_path)
+    img = Magick::Image.read(img_path).first
+    thumb = img.resize_to_fit 600, 600
+    thumb.write dest_path
   end
 end
